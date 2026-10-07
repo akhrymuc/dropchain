@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>dropchain</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1420">
+<meta name="description" content="落ち物連鎖パズル">
+
+<!-- ホーム画面に追加したときに全画面アプリとして起動する（iOS） -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="dropchain">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css?v4">
+</head>
+<body>
+
+<!-- ===== ホーム画面 ===== -->
+<section id="home" class="screen is-active">
+  <h1 class="brand">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="21" cy="43" r="12" fill="#e8475a"/>
+      <circle cx="43" cy="43" r="12" fill="#3d8ce0"/>
+      <circle cx="43" cy="21" r="12" fill="#46c06a"/>
+      <circle cx="17" cy="17" r="5" fill="#e8c33c" opacity=".9"/>
+      <g fill="#fff" opacity=".45">
+        <circle cx="17" cy="39" r="3.5"/><circle cx="39" cy="39" r="3.5"/><circle cx="39" cy="17" r="3.5"/>
+      </g>
+    </svg>
+    <span class="brand-text">
+      <span class="brand-name">dropchain</span>
+      <span class="brand-sub">おちもの連鎖パズル</span>
+    </span>
+  </h1>
+
+  <div class="best-card">
+    <span class="best-card-label">ハイスコア</span>
+    <span id="homeBest" class="best-card-value">0</span>
+  </div>
+
+  <button id="continueBtn" class="btn btn-primary hidden">続きから</button>
+  <p id="continueInfo" class="continue-info hidden"></p>
+  <button id="startBtn" class="btn btn-primary">はじめる</button>
+
+  <label class="toggle">
+    <input id="symbolsToggle" type="checkbox">
+    <span class="toggle-track" aria-hidden="true"><span class="toggle-knob"></span></span>
+    <span class="toggle-text">色に記号を重ねる<small>● ▲ ■ ★ ◆ で見分けやすく</small></span>
+  </label>
+
+  <div class="howto">
+    <p>同じ色が <b>4つ</b> 上下左右につながると消えます。</p>
+    <p>消えたあとに落ちてきた玉がまた揃うと <b>連鎖</b>。連鎖を重ねるほど得点が大きく伸びます。</p>
+    <p>左から3列目のいちばん上（<span class="x-mark">×</span>のマス）が埋まると終わりです。</p>
+  </div>
+
+  <p id="version" class="version"></p>
+</section>
+
+<!-- ===== ゲーム画面 ===== -->
+<section id="game" class="screen">
+  <header class="hud">
+    <button id="pauseBtn" class="btn-icon" aria-label="一時停止">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+    </button>
+    <div class="hud-score">
+      <span class="hud-label">スコア</span>
+      <span id="scoreLabel" class="hud-value">0</span>
+    </div>
+    <div class="hud-level">
+      <span class="hud-label">レベル</span>
+      <span id="levelLabel" class="hud-value">1</span>
+    </div>
+  </header>
+
+  <div class="next-row">
+    <span class="hud-label">NEXT</span>
+    <div id="next1" class="next-pair"><i></i><i></i></div>
+    <div id="next2" class="next-pair small"><i></i><i></i></div>
+    <span class="best-mini">ハイスコア <span id="bestLabel">0</span></span>
+  </div>
+
+  <div class="board-wrap">
+    <canvas id="board" class="board" role="img" aria-label="盤面"></canvas>
+  </div>
+
+  <div class="pad">
+    <button class="key" data-key="left"   aria-label="左へ">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+    </button>
+    <button class="key" data-key="down"   aria-label="速く落とす">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>
+    </button>
+    <button class="key" data-key="right"  aria-label="右へ">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <button class="key key-rotate" data-key="rotate" aria-label="回す">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2.05-4.95"/><path d="M17.5 3.5v4h-4"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- ===== 一時停止 ===== -->
+<div id="pauseOverlay" class="overlay">
+  <div class="overlay-card">
+    <p class="overlay-title">一時停止</p>
+    <p class="overlay-detail">いまの状態を保存しました。<br>ホームへ戻っても続きから遊べます。</p>
+    <button id="resumeBtn" class="btn btn-primary">つづける<small>3, 2, 1 で再開</small></button>
+    <button id="quitBtn" class="btn btn-secondary">ホームへ</button>
+  </div>
+</div>
+
+<!-- ===== 終わったとき ===== -->
+<div id="overOverlay" class="overlay">
+  <div class="overlay-card">
+    <p id="overTitle" class="overlay-title">おしまい</p>
+    <p id="overNew" class="overlay-new hidden">ハイスコア更新！</p>
+    <p class="overlay-score"><span id="overScore">0</span><small>点</small></p>
+    <p id="overDetail" class="overlay-detail"></p>
+    <button id="againBtn" class="btn btn-primary">もう一度</button>
+    <button id="homeBtn" class="btn btn-secondary">ホームへ</button>
+  </div>
+</div>
+
+<script src="game.js?v4"></script>
+<script src="app.js?v4"></script>
+</body>
+</html>
